@@ -1,0 +1,56 @@
+# Maintainer: Christoph Haag <haagch@studi.informatik.uni-stuttgart.de>
+_mingw_w64_ver="1.0"
+_mingw_w64_date="20131227" # latest x86_64
+[ "$CARCH" = 'i686' ]   && _mingw_w64_date="20130523" # latest i686
+
+#http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Automated%20Builds/mingw-w32-bin_x86_64-linux_20131208.tar.bz2/download
+_actual_file="mingw-w32-bin_x86_64-linux_${_mingw_w64_date}.tar.bz2"    # http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Automated%20Builds/mingw-w32-bin_x86_64-linux_20130622.tar.bz2/download
+[ "$CARCH" = 'i686' ]   && _actual_file="mingw-w32-bin_i686-linux_${_mingw_w64_date}.tar.bz2"    # http://sourceforge.net/projects/mingw-w64/files/Toolchains%20targetting%20Win32/Automated%20Builds/mingw-w32-bin_i686-linux_20130523.tar.bz2/download
+
+_repository="http://downloads.sourceforge.net/project/mingw-w64/Toolchains%20targetting%20Win32/Automated%20Builds/"
+
+pkgname='mingw-w32-bin'
+pkgver="${_mingw_w64_ver}_${_mingw_w64_date}"
+pkgrel=2
+pkgdesc="MinGW Toolchain fork for building Windows i686 executables - Automated Builds provided by mingw-w64 upstream"
+url="http://mingw-w64.sourceforge.net/"
+arch=('x86_64' 'i686')
+license=('GPL')
+depends=('bash' 'zlib')
+makedepends=('bar')
+options=(!strip docs zipman !emptydirs !libtool)
+source=(${_actual_file}::${_repository}${_actual_file})
+noextract=(${_actual_file})
+install=${pkgname}.install
+replaces=("mingw-w64-bin_i686")
+conflicts=("mingw-w64-bin_i686" "mingw-w64-gcc") #from [community]
+groups=("pipelight-devel")
+
+md5sums=('6c367bc0b7d220b6deff256887dcc025')
+[ "$CARCH" = 'i686' ]   && md5sums=('b37bdff37150e304e67c8e3d03c911c6')
+
+build() {
+    echo "Nothing to build."
+}
+
+package() {
+
+    (
+        mkdir -p "${pkgdir}/opt/mingw_w32"
+        cd "${pkgdir}/opt/mingw_w32"
+        echo "Extracting files from binary tarball : "
+        bar "${SRCDEST}/${_actual_file}" | tar -jx
+
+        # remove wrong permissions
+        echo "Fixating permissions on files ... "
+        chmod -R a+X,a+r .
+        find . -name '*.a' -exec chmod -x {} \;
+    )
+
+    (
+        mkdir -p "${pkgdir}/usr/bin"
+        cd "${pkgdir}/usr/bin"
+        find "../../opt/mingw_w32/bin/" -type f -name 'i686-w64-mingw32-*' -exec ln -s {} \;
+    )
+
+}
